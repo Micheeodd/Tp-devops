@@ -12,20 +12,16 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:latest
+        image: mariadb:10.7
         env:
           MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: tpdevops
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -p password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -p password" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-    - name: Checkout code
+    - name: Checkout du code
       uses: actions/checkout@v3
 
     - name: Setup Node.js
@@ -33,22 +29,20 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install dependencies
+    - name: Installer les dépendances
       run: npm install
 
-    - name: Lint
+    - name: Linter
       run: npm run lint
 
-    - name: Wait for MariaDB to be healthy
-      run: |
-        echo "Waiting for MariaDB..."
-        sleep 20
+    - name: Attendre que MariaDB soit prêt
+      run: sleep 20
 
-    - name: Seed database
+    - name: Initialiser la BDD
       run: node fixtures/seed.js
 
-    - name: Run unit tests
+    - name: Lancer les tests unitaires
       run: npm test
 
-    - name: Run Cypress E2E tests
+    - name: Lancer les tests Cypress
       run: npx cypress run
