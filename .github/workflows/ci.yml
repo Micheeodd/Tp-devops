@@ -1,0 +1,52 @@
+name: CI/CD DevOps TP2
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:latest
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: tpdevops
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -p password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+    - name: Checkout du code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Installer les dépendances
+      run: npm install
+
+    - name: Lint du code
+      run: npm run lint
+
+    - name: Attendre que MariaDB soit prêt
+      run: sleep 20
+
+    - name: Initialiser la base de données (fixtures)
+      run: node fixtures/seed.js
+
+    - name: Lancer les tests unitaires
+      run: npm test
+
+    - name: Lancer les tests Cypress (E2E)
+      run: npx cypress run
