@@ -22,10 +22,10 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -p password"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
     steps:
-    - name: Checkout du code
+    - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Setup Node.js
@@ -33,20 +33,22 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Installer les dépendances
+    - name: Install dependencies
       run: npm install
 
-    - name: Lint du code
+    - name: Lint
       run: npm run lint
 
-    - name: Attendre que MariaDB soit prêt
-      run: sleep 20
+    - name: Wait for MariaDB to be healthy
+      run: |
+        echo "Waiting for MariaDB..."
+        sleep 20
 
-    - name: Initialiser la base de données (fixtures)
+    - name: Seed database
       run: node fixtures/seed.js
 
-    - name: Lancer les tests unitaires
+    - name: Run unit tests
       run: npm test
 
-    - name: Lancer les tests Cypress (E2E)
+    - name: Run Cypress E2E tests
       run: npx cypress run
